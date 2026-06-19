@@ -1,0 +1,309 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'CBFHomeAway2026';
+  src: url('/fonts/CBFHomeAway2026.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SummerCrush';
+  src: url('/fonts/SummerCrush.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --background: #FFFFFF;
+  --foreground: #111111;
+  
+  /* Definir variáveis no escopo root para compatibilidade */
+  --font-titulo: 'CBFHomeAway2026', sans-serif;
+  --font-papernotes: 'SummerCrush', cursive;
+}
+
+@theme {
+  --color-copa-yellow: #FFD400;
+  --color-copa-blue: #1E3F95;
+  --color-copa-blue-dark: #12317A;
+  --color-copa-white: #FFFFFF;
+  --color-copa-black: #111111;
+  --color-copa-green: #04A934;
+  --color-copa-red: #D93535;
+  --color-copa-gray: #F5F5F5;
+
+  --font-titulo: 'CBFHomeAway2026', sans-serif;
+  --font-papernotes: 'SummerCrush', cursive;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Custom micro-animations */
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 4px 4px 0px #12317A;
+  }
+  50% {
+    transform: scale(1.015);
+    box-shadow: 6px 6px 0px #12317A;
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+/* Animations helpers */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out forwards;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.duration-3000 {
+  animation-duration: 3s;
+}
+
+.duration-2000 {
+  animation-duration: 2s;
+}
+
+.animate-reverse-spin {
+  animation: spin 2s linear infinite reverse;
+}
+
+/* Marquee / infinite scroll */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marqueeReverse {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+.marquee {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.marquee-track {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  width: max-content;
+  gap: 1rem;
+  animation: marquee var(--marquee-duration, 40s) linear infinite;
+}
+
+.marquee-track.reverse {
+  animation-name: marqueeReverse;
+}
+
+.marquee:hover .marquee-track,
+*:hover > .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Hero sticker wiggle */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(var(--wiggle-rot, 0deg)) translateY(0px); }
+  25%       { transform: rotate(var(--wiggle-rot, 0deg)) translateY(-6px); }
+  75%       { transform: rotate(var(--wiggle-rot, 0deg)) translateY(4px); }
+}
+
+/* Shine sweep */
+@keyframes shineSweep {
+  0%   { transform: translateX(-100%) skewX(-15deg); opacity: 0; }
+  50%  { opacity: 0.6; }
+  100% { transform: translateX(200%) skewX(-15deg); opacity: 0; }
+}
+
+.shine-effect::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.55) 50%, transparent 60%);
+  animation: shineSweep 3.5s ease-in-out infinite;
+}
+
+.shine-effect {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ── Carousel ──────────────────────────────────────────── */
+.carousel-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.carousel-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* Arrow buttons */
+.carousel-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: #1E3F95;
+  color: #FFD400;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  transition: background 0.15s, transform 0.12s;
+}
+.carousel-btn:hover  { background: #12317A; transform: scale(1.08); }
+.carousel-btn:active { transform: scale(0.95); }
+
+/* Track: 3 cards in a row, overflow hidden */
+.carousel-track {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* Cards */
+.carousel-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.875rem;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), opacity 0.3s, box-shadow 0.3s;
+}
+
+/* Side cards: scaled down, dimmed */
+.carousel-card--side {
+  transform: scale(0.82);
+  opacity: 0.55;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+
+/* Center card: full size, highlighted */
+.carousel-card--center {
+  transform: scale(1);
+  opacity: 1;
+  box-shadow: 0 8px 28px rgba(30,63,149,0.22);
+  z-index: 2;
+}
+
+/* Images inside cards */
+.testimonial-img {
+  width: 100%;
+  height: auto;
+  max-height: 16rem;
+  object-fit: contain;
+  border-radius: 0.75rem;
+  user-select: none;
+  pointer-events: none;
+  display: block;
+}
+
+.figurinha-img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  user-select: none;
+  pointer-events: none;
+  display: block;
+}
+
+/* Dot indicators */
+.carousel-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.carousel-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: rgba(30, 63, 149, 0.25);
+  transition: background 0.2s, transform 0.2s;
+  padding: 0;
+}
+
+.carousel-dot--active {
+  background: #1E3F95;
+  transform: scale(1.35);
+}
+
+/* ── Responsividade Mobile First ──────────────────────── */
+
+/* xs / mobile: cards um pouco menores */
+@media (max-width: 399px) {
+  .carousel-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  .carousel-track {
+    gap: 0.375rem;
+  }
+  .carousel-card--side {
+    transform: scale(0.72);
+    opacity: 0.45;
+  }
+}
+
+/* md+: cards maiores com mais gap */
+@media (min-width: 768px) {
+  .carousel-track {
+    gap: 1rem;
+  }
+  .carousel-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  .testimonial-img {
+    max-height: 20rem;
+  }
+}

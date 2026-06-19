@@ -1,0 +1,13 @@
+# Ignore large folders and local caches
+.next/
+node_modules/
+VSL/
+reference/
+
+# Ignore large media files that exceed Vercel's 100MB upload limit
+*.mp4
+*.zip
+
+# Ignore local database
+*.db
+*.db-journal
