@@ -13,6 +13,14 @@ export async function GET(
   const { orderId } = await params
 
   try {
+    // Carregar fonte esportiva
+    const fontPath = path.join(process.cwd(), 'public', 'fonts', 'CBFHomeAway2026.ttf')
+    const fontData = await fs.readFile(fontPath)
+
+    // Carregar fonte manuscrita
+    const fontHandPath = path.join(process.cwd(), 'public', 'fonts', 'SummerCrush.otf')
+    const fontHandData = await fs.readFile(fontHandPath)
+
     let lead: any = null
     let isPaid = false
 
@@ -41,49 +49,144 @@ export async function GET(
       isPaid = order.status === 'PAID' || order.status === 'DELIVERED'
 
       // Se a foto já é uma figurinha gerada pela IA (template preenchido),
-      // retornar diretamente sem envolver no wrapper customizado.
+      // retornar diretamente (se pago) ou com marca d'água (se não pago).
       const photoUrl: string = lead?.photoUrl || ''
       const isAiGenerated = photoUrl.includes('ai_craque')
 
       if (isAiGenerated && photoUrl) {
-        if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
-          // URL externa (ex: Supabase) — fazer proxy para evitar CORS
-          const upstream = await fetch(photoUrl)
-          if (upstream.ok) {
-            const buf = await upstream.arrayBuffer()
-            const contentType = upstream.headers.get('content-type') || 'image/png'
-            return new NextResponse(buf, {
-              headers: {
-                'Content-Type': contentType,
-                'Cache-Control': 'public, max-age=86400',
-              },
-            })
+        if (isPaid) {
+          if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+            // URL externa (ex: Supabase) — fazer proxy para evitar CORS
+            const upstream = await fetch(photoUrl)
+            if (upstream.ok) {
+              const buf = await upstream.arrayBuffer()
+              const contentType = upstream.headers.get('content-type') || 'image/png'
+              return new NextResponse(buf, {
+                headers: {
+                  'Content-Type': contentType,
+                  'Cache-Control': 'public, max-age=86400',
+                },
+              })
+            }
+          } else {
+            // Arquivo local em public/uploads
+            const localPath = path.join(process.cwd(), 'public', photoUrl)
+            try {
+              const fileBuffer = await fs.readFile(localPath)
+              return new NextResponse(fileBuffer, {
+                headers: {
+                  'Content-Type': 'image/png',
+                  'Cache-Control': 'public, max-age=86400',
+                },
+              })
+            } catch {
+              // Fallback
+            }
           }
         } else {
-          // Arquivo local em public/uploads
-          const localPath = path.join(process.cwd(), 'public', photoUrl)
-          try {
-            const fileBuffer = await fs.readFile(localPath)
-            return new NextResponse(fileBuffer, {
-              headers: {
-                'Content-Type': 'image/png',
-                'Cache-Control': 'public, max-age=86400',
-              },
-            })
-          } catch {
-            // Fallback para o render customizado abaixo
+          // Não pago: aplicar marca d'água de prévia
+          let aiPhotoBase64 = ''
+          if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+            try {
+              const upstream = await fetch(photoUrl)
+              if (upstream.ok) {
+                const arrayBuffer = await upstream.arrayBuffer()
+                const contentType = upstream.headers.get('content-type') || 'image/png'
+                const buffer = Buffer.from(arrayBuffer)
+                aiPhotoBase64 = `data:${contentType};base64,${buffer.toString('base64')}`
+              }
+            } catch (e) {
+              console.error('Erro ao baixar foto externa para marca dágua:', e)
+            }
+          } else {
+            const localPath = path.join(process.cwd(), 'public', photoUrl)
+            try {
+              const fileBuffer = await fs.readFile(localPath)
+              const ext = path.extname(photoUrl).replace('.', '')
+              aiPhotoBase64 = `data:image/${ext || 'png'};base64,${fileBuffer.toString('base64')}`
+            } catch (e) {
+              console.error('Erro ao ler foto local para marca dágua:', e)
+            }
+          }
+
+          if (aiPhotoBase64) {
+            return new ImageResponse(
+              (
+                <div
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={aiPhotoBase64}
+                    alt="Figurinha"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                    }}
+                  />
+                  {/* Watermark Overlay */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '0',
+                      left: '0',
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    <div
+                      style={{
+                        transform: 'rotate(-35deg)',
+                        border: '8px solid rgba(217, 53, 85, 0.85)',
+                        color: 'rgba(217, 53, 85, 0.85)',
+                        fontSize: '64px',
+                        fontFamily: 'CBFHomeAway2026',
+                        fontWeight: 'bold',
+                        padding: '10px 40px',
+                        letterSpacing: '8px',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                      }}
+                    >
+                      PRÉVIA
+                    </div>
+                  </div>
+                </div>
+              ),
+              {
+                width: 400,
+                height: 560,
+                fonts: [
+                  {
+                    name: 'CBFHomeAway2026',
+                    data: fontData,
+                    style: 'normal',
+                  }
+                ]
+              }
+            )
           }
         }
       }
     }
-
-    // Carregar fonte esportiva
-    const fontPath = path.join(process.cwd(), 'public', 'fonts', 'CBFHomeAway2026.ttf')
-    const fontData = await fs.readFile(fontPath)
-
-    // Carregar fonte manuscrita
-    const fontHandPath = path.join(process.cwd(), 'public', 'fonts', 'SummerCrush.otf')
-    const fontHandData = await fs.readFile(fontHandPath)
 
     // Tratar imagem do lead
     let photoBase64 = ''

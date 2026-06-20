@@ -3,9 +3,10 @@ import React from 'react'
 interface PriceBlockProps {
   priceCents: number
   onPurchase: () => void
+  isLoading?: boolean
 }
 
-export function PriceBlock({ priceCents, onPurchase }: PriceBlockProps) {
+export function PriceBlock({ priceCents, onPurchase, isLoading }: PriceBlockProps) {
   const formattedPrice = (priceCents / 100).toLocaleString('pt-BR', {
     style: 'currency',
     currency: 'BRL',
@@ -45,10 +46,18 @@ export function PriceBlock({ priceCents, onPurchase }: PriceBlockProps) {
       <button
         onClick={onPurchase}
         type="button"
-        className="w-full max-w-md bg-copa-blue hover:bg-copa-blue-dark active:scale-95 text-white font-bold text-2xl py-5 rounded-2xl border-2 border-copa-blue-dark shadow-[4px_4px_0px_#12317A] transition-all uppercase tracking-widest animate-pulse-glow cursor-pointer"
+        disabled={isLoading}
+        className="w-full max-w-md bg-copa-blue hover:bg-copa-blue-dark active:scale-95 text-white font-bold text-2xl py-5 rounded-2xl border-2 border-copa-blue-dark shadow-[4px_4px_0px_#12317A] transition-all uppercase tracking-widest animate-pulse-glow cursor-pointer disabled:opacity-50 flex items-center justify-center gap-3"
         style={{ fontFamily: 'var(--font-titulo)' }}
       >
-        RECEBER MINHA FIGURINHA
+        {isLoading ? (
+          <>
+            <div className="w-6 h-6 border-4 border-t-transparent border-white rounded-full animate-spin" />
+            Redirecionando...
+          </>
+        ) : (
+          'RECEBER MINHA FIGURINHA'
+        )}
       </button>
 
       {/* Info liberação imediata */}

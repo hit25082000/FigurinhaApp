@@ -136,7 +136,8 @@ class OnProfitPaymentProvider implements PaymentProvider {
     // Passamos o orderId no parâmetro 'src' para recuperar via webhook e redirecionamento
     params.append('src', orderId)
 
-    const checkoutUrl = `${baseUrl}?${params.toString()}`
+    const separator = baseUrl.includes('?') ? '&' : '?'
+    const checkoutUrl = `${baseUrl}${separator}${params.toString()}`
 
     return {
       checkoutUrl,

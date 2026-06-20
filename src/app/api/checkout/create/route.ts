@@ -7,8 +7,8 @@ export async function POST(req: NextRequest) {
     const data = await req.json()
     const { orderId, email, name, cpf, phone } = data
 
-    if (!orderId || !email || !name) {
-      return NextResponse.json({ error: 'Dados obrigatórios ausentes' }, { status: 400 })
+    if (!orderId) {
+      return NextResponse.json({ error: 'orderId é obrigatório' }, { status: 400 })
     }
 
     const order = await db.order.findUnique({
@@ -20,6 +20,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 })
     }
 
+    const emailToUse = email || order.lead?.email
+    const nameToUse = name || order.lead?.name
+
+    if (!emailToUse || !nameToUse) {
+      return NextResponse.json({ error: 'Dados obrigatórios ausentes' }, { status: 400 })
+    }
+
     // Atualiza status do pedido
     await db.order.update({
       where: { id: orderId },
@@ -29,10 +36,10 @@ export async function POST(req: NextRequest) {
     const paymentProvider = getPaymentProvider()
     const session = await paymentProvider.createPaymentSession(
       orderId,
-      email,
+      emailToUse,
       order.totalCents,
-      `Figurinha Personalizada Copa 2026 - ${order.lead.name}`,
-      { name, phone, cpf }
+      `Figurinha Personalizada Copa 2026 - ${nameToUse}`,
+      { name: nameToUse, phone, cpf }
     )
 
     // Atualizar pedido com informações de checkout
