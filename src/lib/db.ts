@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { randomUUID } from 'crypto'
 
 const supabaseUrl = process.env.SUPABASE_URL || 'https://placeholder.supabase.co'
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder'
@@ -48,7 +49,7 @@ export const db = {
     async create({ data }: { data: any }) {
       const { data: created, error } = await supabase
         .from('Lead')
-        .insert(data)
+        .insert({ id: data.id || randomUUID(), ...data })
         .select()
         .single()
       if (error) throw new Error(error.message)
@@ -89,7 +90,7 @@ export const db = {
     async create({ data }: { data: any }) {
       const { data: created, error } = await supabase
         .from('Order')
-        .insert(data)
+        .insert({ id: data.id || randomUUID(), ...data })
         .select()
         .single()
       if (error) throw new Error(error.message)
@@ -141,7 +142,7 @@ export const db = {
     async create({ data }: { data: any }) {
       const { data: created, error } = await supabase
         .from('Product')
-        .insert(data)
+        .insert({ id: data.id || randomUUID(), ...data })
         .select()
         .single()
       if (error) throw new Error(error.message)
@@ -161,7 +162,7 @@ export const db = {
     async create({ data }: { data: any }) {
       const { data: created, error } = await supabase
         .from('PaymentEvent')
-        .insert(data)
+        .insert({ id: data.id || randomUUID(), ...data })
         .select()
         .single()
       if (error) throw new Error(error.message)
