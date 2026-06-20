@@ -49,7 +49,7 @@ export const db = {
     async create({ data }: { data: any }) {
       const { data: created, error } = await supabase
         .from('Lead')
-        .insert({ id: data.id || randomUUID(), ...data })
+        .insert({ id: data.id || randomUUID(), updatedAt: new Date(), ...data })
         .select()
         .single()
       if (error) throw new Error(error.message)
@@ -58,7 +58,7 @@ export const db = {
     async update({ where, data }: { where: { id: string }; data: any }) {
       const { data: updated, error } = await supabase
         .from('Lead')
-        .update(data)
+        .update({ updatedAt: new Date(), ...data })
         .eq('id', where.id)
         .select()
         .single()
@@ -90,7 +90,7 @@ export const db = {
     async create({ data }: { data: any }) {
       const { data: created, error } = await supabase
         .from('Order')
-        .insert({ id: data.id || randomUUID(), ...data })
+        .insert({ id: data.id || randomUUID(), updatedAt: new Date(), ...data })
         .select()
         .single()
       if (error) throw new Error(error.message)
@@ -99,7 +99,7 @@ export const db = {
     async update({ where, data }: { where: { id: string }; data: any }) {
       const { data: updated, error } = await supabase
         .from('Order')
-        .update(data)
+        .update({ updatedAt: new Date(), ...data })
         .eq('id', where.id)
         .select()
         .single()
