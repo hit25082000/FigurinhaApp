@@ -10,7 +10,12 @@ export interface PaymentProvider {
     orderId: string,
     email: string,
     amountCents: number,
-    description: string
+    description: string,
+    customerDetails?: {
+      name?: string
+      phone?: string
+      cpf?: string
+    }
   ): Promise<PaymentSessionResult>
 }
 
@@ -19,7 +24,12 @@ class MockPaymentProvider implements PaymentProvider {
     orderId: string,
     email: string,
     amountCents: number,
-    description: string
+    description: string,
+    customerDetails?: {
+      name?: string
+      phone?: string
+      cpf?: string
+    }
   ): Promise<PaymentSessionResult> {
     const isLocal = true
     const checkoutUrl = `/checkout/${orderId}/mock-gateway`
@@ -50,11 +60,16 @@ class StripePaymentProvider implements PaymentProvider {
     orderId: string,
     email: string,
     amountCents: number,
-    description: string
+    description: string,
+    customerDetails?: {
+      name?: string
+      phone?: string
+      cpf?: string
+    }
   ): Promise<PaymentSessionResult> {
     if (!this.apiKey) {
       console.warn('Chave Stripe não configurada. Usando MockPaymentProvider.')
-      return new MockPaymentProvider().createPaymentSession(orderId, email, amountCents, description)
+      return new MockPaymentProvider().createPaymentSession(orderId, email, amountCents, description, customerDetails)
     }
 
     try {
@@ -91,7 +106,41 @@ class StripePaymentProvider implements PaymentProvider {
       }
     } catch (error) {
       console.error('Erro ao criar sessão Stripe:', error)
-      return new MockPaymentProvider().createPaymentSession(orderId, email, amountCents, description)
+      return new MockPaymentProvider().createPaymentSession(orderId, email, amountCents, description, customerDetails)
+    }
+  }
+}
+
+class OnProfitPaymentProvider implements PaymentProvider {
+  async createPaymentSession(
+    orderId: string,
+    email: string,
+    amountCents: number,
+    description: string,
+    customerDetails?: {
+      name?: string
+      phone?: string
+      cpf?: string
+    }
+  ): Promise<PaymentSessionResult> {
+    const baseUrl = process.env.ONPROFIT_CHECKOUT_URL || 'https://pay.onprofit.com.br/MOCK_PRODUCT'
+    
+    const name = customerDetails?.name || ''
+    const phone = customerDetails?.phone || ''
+
+    const params = new URLSearchParams()
+    if (name) params.append('name', name)
+    if (email) params.append('email', email)
+    if (phone) params.append('cellphone', phone)
+    
+    // Passamos o orderId no parâmetro 'src' para recuperar via webhook e redirecionamento
+    params.append('src', orderId)
+
+    const checkoutUrl = `${baseUrl}?${params.toString()}`
+
+    return {
+      checkoutUrl,
+      paymentId: `onprofit_${orderId}`
     }
   }
 }
@@ -100,6 +149,9 @@ export function getPaymentProvider(): PaymentProvider {
   const provider = process.env.PAYMENT_PROVIDER || 'mock'
   if (provider === 'stripe') {
     return new StripePaymentProvider()
+  }
+  if (provider === 'onprofit') {
+    return new OnProfitPaymentProvider()
   }
   return new MockPaymentProvider()
 }

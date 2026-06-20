@@ -5,18 +5,57 @@ export interface StorageProvider {
   uploadFile(buffer: Buffer, fileName: string, mimeType: string): Promise<string>
 }
 
+class TmpFilesStorageProvider implements StorageProvider {
+  async uploadFile(buffer: Buffer, fileName: string, mimeType: string): Promise<string> {
+    try {
+      const formData = new FormData()
+      const blob = new Blob([new Uint8Array(buffer)], { type: mimeType })
+      formData.append('file', blob, fileName)
+
+      console.log(`[TmpFilesStorageProvider] Uploading ${fileName} to tmpfiles.org...`)
+      const res = await fetch('https://tmpfiles.org/api/v1/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        throw new Error(`tmpfiles.org upload failed: ${res.statusText} - ${errorText}`)
+      }
+
+      const json = await res.json()
+      if (json.status !== 'success' || !json.data?.url) {
+        throw new Error(`tmpfiles.org API returned failure: ${JSON.stringify(json)}`)
+      }
+
+      const viewerUrl = json.data.url
+      const directDownloadUrl = viewerUrl.replace('tmpfiles.org/', 'tmpfiles.org/dl/')
+      console.log(`[TmpFilesStorageProvider] Uploaded successfully: ${directDownloadUrl}`)
+      return directDownloadUrl
+    } catch (error: any) {
+      console.error('[TmpFilesStorageProvider] Error uploading to tmpfiles.org:', error)
+      throw error
+    }
+  }
+}
+
 class LocalStorageProvider implements StorageProvider {
   async uploadFile(buffer: Buffer, fileName: string, mimeType: string): Promise<string> {
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-    
-    // Garantir que a pasta public/uploads exista
-    await fs.mkdir(uploadDir, { recursive: true })
-    
-    const filePath = path.join(uploadDir, fileName)
-    await fs.writeFile(filePath, buffer)
-    
-    // Retorna a URL relativa servida estaticamente pelo Next.js
-    return `/uploads/${fileName}`
+    try {
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads')
+      
+      // Garantir que a pasta public/uploads exista
+      await fs.mkdir(uploadDir, { recursive: true })
+      
+      const filePath = path.join(uploadDir, fileName)
+      await fs.writeFile(filePath, buffer)
+      
+      // Retorna a URL relativa servida estaticamente pelo Next.js
+      return `/uploads/${fileName}`
+    } catch (err: any) {
+      console.warn(`[LocalStorageProvider] Failed to write locally (${err.message}). Falling back to tmpfiles.org...`)
+      return new TmpFilesStorageProvider().uploadFile(buffer, fileName, mimeType)
+    }
   }
 }
 
@@ -71,6 +110,9 @@ export function getStorageProvider(): StorageProvider {
   const provider = process.env.STORAGE_PROVIDER || 'local'
   if (provider === 'supabase') {
     return new SupabaseStorageProvider()
+  }
+  if (provider === 'tmpfiles') {
+    return new TmpFilesStorageProvider()
   }
   return new LocalStorageProvider()
 }

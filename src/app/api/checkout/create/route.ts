@@ -31,7 +31,8 @@ export async function POST(req: NextRequest) {
       orderId,
       email,
       order.totalCents,
-      `Figurinha Personalizada Copa 2026 - ${order.lead.name}`
+      `Figurinha Personalizada Copa 2026 - ${order.lead.name}`,
+      { name, phone, cpf }
     )
 
     // Atualizar pedido com informações de checkout

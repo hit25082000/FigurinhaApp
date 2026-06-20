@@ -91,6 +91,51 @@ export default function ObrigadoPage({ params }: { params: Promise<{ orderId: st
                 </a>
               </div>
 
+              {/* Bumps Adquiridos */}
+              {order?.selectedBumps && order.selectedBumps.length > 0 && (
+                <div className="w-full flex flex-col gap-3 mt-4 border-t pt-4 border-copa-blue/10">
+                  <h4 className="text-xs font-bold text-copa-blue uppercase tracking-widest text-left">
+                    ⚡ Itens Adicionais Adquiridos
+                  </h4>
+                  {order.selectedBumps.map((bump: any) => {
+                    let downloadUrl = ''
+                    let actionText = ''
+                    if (bump.id === 'bump-pdf-pack') {
+                      downloadUrl = '/assets/pacote_figurinha.jpg'
+                      actionText = '📥 Baixar Pacote'
+                    } else if (bump.id === 'bump-poster-a2') {
+                      downloadUrl = '/assets/A2.png'
+                      actionText = '🖼️ Baixar Pôster A2'
+                    } else if (bump.id === 'bump-brazil-selection') {
+                      downloadUrl = '/assets/pacote_brasil.jpeg'
+                      actionText = '🇧🇷 Baixar Seleção'
+                    } else if (bump.id === 'bump-neymar-edition') {
+                      downloadUrl = '/assets/figurinha_neymar.png'
+                      actionText = '⚽ Baixar Neymar'
+                    }
+
+                    return (
+                      <div key={bump.id} className="bg-copa-gray rounded-xl p-3 flex flex-col gap-2 text-left border border-gray-200">
+                        <div className="text-xs font-bold text-copa-blue-dark">{bump.name}</div>
+                        {downloadUrl ? (
+                          <a
+                            href={downloadUrl}
+                            download
+                            className="bg-copa-blue hover:bg-copa-blue-dark text-white font-bold text-[10px] py-2 px-3 rounded-lg text-center transition-all uppercase tracking-wide cursor-pointer"
+                          >
+                            {actionText}
+                          </a>
+                        ) : (
+                          <div className="text-[10px] font-bold text-copa-green uppercase">
+                            ✓ Participação no Sorteio Registrada
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
               {/* Mensagem e-mail */}
               <div className="bg-copa-blue/10 border border-copa-blue/20 rounded-xl p-3 w-full text-xs font-semibold text-copa-blue-dark">
                 📬 Também enviamos os links de download para o seu e-mail: <strong className="select-all">{order?.lead?.email}</strong>.

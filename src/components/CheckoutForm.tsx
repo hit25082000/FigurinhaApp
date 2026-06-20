@@ -145,6 +145,12 @@ export function CheckoutForm({ orderId, mainPriceCents: initialMainPriceCents, a
         throw new Error(checkoutData.error || 'Falha no checkout')
       }
 
+      // Redireciona se for uma URL externa (como OnProfit)
+      if (checkoutData.checkoutUrl && checkoutData.checkoutUrl.startsWith('http') && !checkoutData.checkoutUrl.startsWith('/checkout/')) {
+        window.location.href = checkoutData.checkoutUrl
+        return
+      }
+
       if (paymentMethod === 'pix') {
         // Exibir dados do pix
         setPixData({
